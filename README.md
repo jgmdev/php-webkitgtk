@@ -2,7 +2,7 @@
 
 A php extension that wraps the [webkitgtk](https://webkitgtk.org/) library and 
 allows you to start a new web browser instance from your php scripts. For now 
-it doesn't offers much but a window where you can load your webui using the php 
+it doesn't offer much but a window where you can load your webui using the php 
 built-in webserver or anything else.
 
 A lot of stuff needs to be done and implemented but for now it gives you a web
