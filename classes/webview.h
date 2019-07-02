@@ -21,6 +21,7 @@
 extern zend_class_entry *webkitWebView_ce;
 
 typedef struct _php_webkit_webview_t {
+	zval* this;
 	WebKitWebView* view;
 	GtkWidget* window;
 	zend_object* parent;
