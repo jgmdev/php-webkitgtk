@@ -588,6 +588,74 @@ PHP_METHOD(WebView, move)
 	gtk_window_move(GTK_WINDOW(win->window), x, y);
 } /* }}} */
 
+ZEND_BEGIN_ARG_INFO_EX(php_webkit_webview_go_back_info, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+/* {{{ proto void WebView::goBack(void) */
+PHP_METHOD(WebView, goBack)
+{
+	php_webkit_webview_t *win = php_webkit_webview_fetch(getThis());
+
+	if (zend_parse_parameters_none() != SUCCESS) {
+		return;
+	}
+
+    webkit_web_view_go_back(win->view);
+} /* }}} */
+
+ZEND_BEGIN_ARG_INFO_EX(php_webkit_webview_go_forward_info, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+/* {{{ proto void WebView::goForward(void) */
+PHP_METHOD(WebView, goForward)
+{
+	php_webkit_webview_t *win = php_webkit_webview_fetch(getThis());
+
+	if (zend_parse_parameters_none() != SUCCESS) {
+		return;
+	}
+
+    webkit_web_view_go_forward(win->view);
+} /* }}} */
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(php_webkit_webview_can_go_back_info, 0, 0, _IS_BOOL, 0)
+ZEND_END_ARG_INFO()
+
+/* {{{ proto bool WebView::canGoBack(void) */
+PHP_METHOD(WebView, canGoBack)
+{
+	php_webkit_webview_t *win = php_webkit_webview_fetch(getThis());
+	
+	if (zend_parse_parameters_none() != SUCCESS) {
+		return;
+	}
+
+	RETURN_BOOL(
+		webkit_web_view_can_go_back(
+			win->view
+		)
+	)
+} /* }}} */
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(php_webkit_webview_can_go_forward_info, 0, 0, _IS_BOOL, 0)
+ZEND_END_ARG_INFO()
+
+/* {{{ proto bool WebView::canGoForward(void) */
+PHP_METHOD(WebView, canGoForward)
+{
+	php_webkit_webview_t *win = php_webkit_webview_fetch(getThis());
+	
+	if (zend_parse_parameters_none() != SUCCESS) {
+		return;
+	}
+
+	RETURN_BOOL(
+		webkit_web_view_can_go_forward(
+			win->view
+		)
+	)
+} /* }}} */
+
 ZEND_BEGIN_ARG_INFO_EX(php_webkit_webview_show_info, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
@@ -646,21 +714,25 @@ PHP_METHOD(WebView, onDestroy) {}
 
 /* {{{ */
 const zend_function_entry php_webkit_webview_methods[] = {
-	PHP_ME(WebView, __construct,    php_webkit_webview_construct_info,     ZEND_ACC_CTOR|ZEND_ACC_PUBLIC)
-	PHP_ME(WebView, __destruct,     php_webkit_webview_destruct_info,      ZEND_ACC_DTOR|ZEND_ACC_PUBLIC)
-	PHP_ME(WebView, loadURI,        php_webkit_webview_load_uri_info,      ZEND_ACC_PUBLIC)
-	PHP_ME(WebView, loadHTML,       php_webkit_webview_load_html_info,     ZEND_ACC_PUBLIC)
-	PHP_ME(WebView, setIcon,        php_webkit_webview_set_icon_info,      ZEND_ACC_PUBLIC)
-	PHP_ME(WebView, setTitle,       php_webkit_webview_set_title_info,     ZEND_ACC_PUBLIC)
-	PHP_ME(WebView, getTitle,       php_webkit_webview_get_title_info,     ZEND_ACC_PUBLIC)
-	PHP_ME(WebView, getURI,         php_webkit_webview_get_uri_info,       ZEND_ACC_PUBLIC)
-	PHP_ME(WebView, resize,         php_webkit_webview_resize_info,        ZEND_ACC_PUBLIC)
-	PHP_ME(WebView, move,           php_webkit_webview_move_info,          ZEND_ACC_PUBLIC)
-	PHP_ME(WebView, show,           php_webkit_webview_show_info,          ZEND_ACC_PUBLIC)
-	PHP_ME(WebView, hide,           php_webkit_webview_hide_info,          ZEND_ACC_PUBLIC)
-	PHP_ME(WebView, onClose,        php_webkit_webview_close_info,         ZEND_ACC_PROTECTED)
-	PHP_ME(WebView, onLoadChanged,  php_webkit_webview_load_changed_info,  ZEND_ACC_PROTECTED)
-	PHP_ME(WebView, onDestroy,      php_webkit_webview_close_info,         ZEND_ACC_PROTECTED)
+	PHP_ME(WebView, __construct,    php_webkit_webview_construct_info,        ZEND_ACC_CTOR|ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, __destruct,     php_webkit_webview_destruct_info,         ZEND_ACC_DTOR|ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, loadURI,        php_webkit_webview_load_uri_info,         ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, loadHTML,       php_webkit_webview_load_html_info,        ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, setIcon,        php_webkit_webview_set_icon_info,         ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, setTitle,       php_webkit_webview_set_title_info,        ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, getTitle,       php_webkit_webview_get_title_info,        ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, getURI,         php_webkit_webview_get_uri_info,          ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, resize,         php_webkit_webview_resize_info,           ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, move,           php_webkit_webview_move_info,             ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, goBack,         php_webkit_webview_go_back_info,          ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, goForward,      php_webkit_webview_go_forward_info,       ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, canGoBack,      php_webkit_webview_can_go_back_info,      ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, canGoForward,   php_webkit_webview_can_go_forward_info,   ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, show,           php_webkit_webview_show_info,             ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, hide,           php_webkit_webview_hide_info,             ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, onClose,        php_webkit_webview_close_info,            ZEND_ACC_PROTECTED)
+	PHP_ME(WebView, onLoadChanged,  php_webkit_webview_load_changed_info,     ZEND_ACC_PROTECTED)
+	PHP_ME(WebView, onDestroy,      php_webkit_webview_close_info,            ZEND_ACC_PROTECTED)
 	PHP_FE_END
 }; /* }}} */
 
