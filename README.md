@@ -1,4 +1,4 @@
-# PHP-WEBKIT
+# PHP-WEBKITGTK
 
 A php extension that wraps the [webkitgtk](https://webkitgtk.org/) library and 
 allows you to start a new web browser instance from your php scripts. For now 
@@ -11,7 +11,7 @@ browser where you can load your PHP/HTML/CSS/JS Apps!
 ## Example
 
 ```php
-$view = new WebKit\WebView("The initial Window Title");
+$view = new WebKitGtk\WebView("The initial Window Title");
 $view->loadURI("http://localhost:8080");
 $view->show();
 ```
@@ -24,8 +24,8 @@ needed to compile gtk and webkitgtk library on anything else...
 ## Steps to install
 
 ```sh
-git clone https://github.com/jgmdev/php-webkit
-cd webkit
+git clone https://github.com/jgmdev/php-webkitgtk
+cd php-webkitgtk
 phpize
 ./configure
 make

@@ -12,7 +12,7 @@
   | obtain it through the world-wide-web, please send a note to          |
   | license@php.net so we can mail you a copy immediately.               |
   +----------------------------------------------------------------------+
-  | Author: jgmdev                                                       |
+  | Author: jgmdev <jgmdev@gmail.com>                                    |
   +----------------------------------------------------------------------+
 */
 
@@ -28,11 +28,11 @@
 #include "php.h"
 #include "php_ini.h"
 #include "ext/standard/info.h"
-#include "php_webkit.h"
+#include "php_webkitgtk.h"
 
 #include <classes/webview.h>
 
-void php_webkit_set_call(
+void php_webkitgtk_set_call(
 	zend_object *object, 
 	const char *name, 
 	size_t nlength, 
@@ -60,7 +60,7 @@ void php_webkit_set_call(
 	fcc->called_scope = object->ce;
 }
 
-int php_webkit_call(zend_fcall_info *fci, zend_fcall_info_cache *fcc) {
+int php_webkitgtk_call(zend_fcall_info *fci, zend_fcall_info_cache *fcc) {
 	int result = zend_call_function(fci, fcc);
 
 	if (result != SUCCESS) {
@@ -72,9 +72,9 @@ int php_webkit_call(zend_fcall_info *fci, zend_fcall_info_cache *fcc) {
 
 /* {{{ PHP_MINIT_FUNCTION
  */
-PHP_MINIT_FUNCTION(webkit)
+PHP_MINIT_FUNCTION(webkitgtk)
 {
-	PHP_MINIT(WebKit_WebView)(INIT_FUNC_ARGS_PASSTHRU);
+	PHP_MINIT(WebKitGtk_WebView)(INIT_FUNC_ARGS_PASSTHRU);
 
 	return SUCCESS;
 }
@@ -82,7 +82,7 @@ PHP_MINIT_FUNCTION(webkit)
 
 /* {{{ PHP_MSHUTDOWN_FUNCTION
  */
-PHP_MSHUTDOWN_FUNCTION(webkit)
+PHP_MSHUTDOWN_FUNCTION(webkitgtk)
 {
 	return SUCCESS;
 }
@@ -90,33 +90,33 @@ PHP_MSHUTDOWN_FUNCTION(webkit)
 
 /* {{{ PHP_MINFO_FUNCTION
  */
-PHP_MINFO_FUNCTION(webkit)
+PHP_MINFO_FUNCTION(webkitgtk)
 {
 	php_info_print_table_start();
-	php_info_print_table_header(2, "webkit support", "enabled");
+	php_info_print_table_header(2, "webkitgtk support", "enabled");
 	php_info_print_table_end();
 }
 /* }}} */
 
-/* {{{ webkit_module_entry
+/* {{{ webkitgtk_module_entry
  */
-zend_module_entry webkit_module_entry = {
+zend_module_entry webkitgtk_module_entry = {
 	STANDARD_MODULE_HEADER,
-	"webkit",
+	"webkitgtk",
 	NULL,
-	PHP_MINIT(webkit),
-	PHP_MSHUTDOWN(webkit),
+	PHP_MINIT(webkitgtk),
+	PHP_MSHUTDOWN(webkitgtk),
 	NULL,
 	NULL,
-	PHP_MINFO(webkit),
-	PHP_WEBKIT_VERSION,
+	PHP_MINFO(webkitgtk),
+	PHP_WEBKITGTK_VERSION,
 	STANDARD_MODULE_PROPERTIES
 };
 /* }}} */
 
-#ifdef COMPILE_DL_WEBKIT
+#ifdef COMPILE_DL_WEBKITGTK
 #ifdef ZTS
 ZEND_TSRMLS_CACHE_DEFINE()
 #endif
-ZEND_GET_MODULE(webkit)
+ZEND_GET_MODULE(webkitgtk)
 #endif
