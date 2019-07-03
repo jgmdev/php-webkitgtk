@@ -33,6 +33,10 @@ typedef struct _php_webkit_webview_t {
 		zend_fcall_info fci;
 		zend_fcall_info_cache fcc;
 	} load_changed;
+	struct php_webkit_webview_load_failed_t {
+		zend_fcall_info fci;
+		zend_fcall_info_cache fcc;
+	} load_failed;
 	struct php_webkit_webview_destroy_t {
 		zend_fcall_info fci;
 		zend_fcall_info_cache fcc;

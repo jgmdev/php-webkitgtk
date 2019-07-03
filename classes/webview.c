@@ -42,6 +42,13 @@ void php_webkit_webview_close_handler(WebKitWebView *view, void *arg);
 void php_webkit_webview_load_changed_handler(
 	WebKitWebView *view, WebKitLoadEvent load_event,  void *arg
 );
+gboolean php_webkit_webview_load_failed_handler (
+	WebKitWebView * view,
+	WebKitLoadEvent load_event,
+	gchar* failing_uri,
+	GError* error,
+	void* arg
+);
 void php_webkit_webview_destroy_handler(GtkWidget* widget, void* arg);
 
 zend_object* php_webkit_webview_create(zend_class_entry *ce) {
@@ -70,6 +77,13 @@ zend_object* php_webkit_webview_create(zend_class_entry *ce) {
 		ZEND_STRL("onloadchanged"), 
 		&w->load_changed.fci, 
 		&w->load_changed.fcc
+	);
+
+	php_webkit_set_call(
+		&w->std, 
+		ZEND_STRL("onloadfailed"), 
+		&w->load_failed.fci, 
+		&w->load_failed.fcc
 	);
 
 	php_webkit_set_call(
@@ -137,6 +151,13 @@ void php_webkit_webview_recreate(zval* object)
 		web_view->view, 
 		"load-changed", 
 		G_CALLBACK(php_webkit_webview_load_changed_handler), 
+		web_view
+	);
+
+	g_signal_connect(
+		web_view->view, 
+		"load-failed", 
+		G_CALLBACK(php_webkit_webview_load_failed_handler), 
 		web_view
 	);
 
@@ -225,6 +246,68 @@ void php_webkit_webview_load_changed_handler(
 	}
 
 	zval_ptr_dtor(&load_event_val);
+}
+
+gboolean php_webkit_webview_load_failed_handler (
+	WebKitWebView * view,
+	WebKitLoadEvent load_event,
+	gchar* failing_uri,
+	GError* error,
+	void* arg
+)
+{
+	php_webkit_webview_t *web_view = (php_webkit_webview_t *) arg;
+
+	zval load_event_val;
+	zval failing_uri_val;
+	zval error_code_val;
+	zval error_message_val;
+
+	zval rv;
+	gboolean result = FALSE;
+
+	if(!web_view->load_failed.fci.size)
+	{
+		return result;
+	}
+
+	ZVAL_LONG(&load_event_val, (long) load_event);
+	ZVAL_STRING(&failing_uri_val, failing_uri);
+	ZVAL_LONG(&error_code_val, error->code);
+	ZVAL_STRING(&error_message_val, error->message);
+
+	zend_fcall_info_argn(
+		&web_view->load_failed.fci, 
+		4, 
+		&load_event_val,
+		&failing_uri_val,
+		&error_code_val,
+		&error_message_val
+	);
+
+	ZVAL_UNDEF(&rv);
+
+	web_view->load_failed.fci.retval = &rv;
+
+	if(
+		php_webkit_call(
+			&web_view->load_failed.fci, 
+			&web_view->load_failed.fcc
+		) == SUCCESS
+	) 
+	{
+		if (Z_TYPE(rv) != IS_UNDEF) {
+			result = (gboolean) zval_get_long(&rv);
+			zval_ptr_dtor(&rv);
+		}
+	}
+
+	zval_ptr_dtor(&load_event_val);
+	zval_ptr_dtor(&failing_uri_val);
+	zval_ptr_dtor(&error_code_val);
+	zval_ptr_dtor(&error_message_val);
+
+	return result;
 }
 
 void php_webkit_webview_destroy_handler(
@@ -317,6 +400,13 @@ PHP_METHOD(WebView, __construct)
 	);
 
 	g_signal_connect(
+		win->view, 
+		"load-failed", 
+		G_CALLBACK(php_webkit_webview_load_failed_handler), 
+		win
+	);
+
+	g_signal_connect(
 		win->window, 
 		"destroy", 
 		G_CALLBACK(php_webkit_webview_destroy_handler), 
@@ -402,6 +492,33 @@ PHP_METHOD(WebView, loadHTML)
 			ZSTR_VAL(base_uri)
 		);
 	}
+} /* }}} */
+
+ZEND_BEGIN_ARG_INFO_EX(php_webkit_webview_load_plain_text_info, 0, 0, 1)
+	ZEND_ARG_TYPE_INFO(0, plain_text, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
+/* {{{ proto void WebView::loadPlainText(string plain_text) */
+PHP_METHOD(WebView, loadPlainText)
+{
+	php_webkit_webview_t *win = php_webkit_webview_fetch(getThis());
+
+	zend_string *plain_text = NULL;
+	
+	if(
+		zend_parse_parameters_throw(
+			ZEND_NUM_ARGS(), 
+			"S", 
+			&plain_text
+		) != SUCCESS
+	) {
+		return;
+	}
+
+	webkit_web_view_load_plain_text(
+		win->view, 
+		ZSTR_VAL(plain_text)
+	);
 } /* }}} */
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(php_webkit_webview_set_icon_info, 0, 1, _IS_BOOL, 0)
@@ -504,6 +621,57 @@ PHP_METHOD(WebView, getURI)
 	const gchar* uri = webkit_web_view_get_uri(win->view);
 
 	RETURN_STRING(uri != NULL ? uri : "")
+} /* }}} */
+
+ZEND_BEGIN_ARG_INFO_EX(php_webkit_webview_reload_info, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+/* {{{ proto void WebView::reload(void) */
+PHP_METHOD(WebView, reload)
+{
+	php_webkit_webview_t *win = php_webkit_webview_fetch(getThis());
+	
+	if (
+		zend_parse_parameters_none() != SUCCESS
+	) {
+		return;
+	}
+
+	webkit_web_view_reload(win->view);
+} /* }}} */
+
+ZEND_BEGIN_ARG_INFO_EX(php_webkit_webview_reload_bypass_cache_info, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+/* {{{ proto void WebView::reloadBypassCache(void) */
+PHP_METHOD(WebView, reloadBypassCache)
+{
+	php_webkit_webview_t *win = php_webkit_webview_fetch(getThis());
+	
+	if (
+		zend_parse_parameters_none() != SUCCESS
+	) {
+		return;
+	}
+
+	webkit_web_view_reload_bypass_cache(win->view);
+} /* }}} */
+
+ZEND_BEGIN_ARG_INFO_EX(php_webkit_webview_stop_loading_info, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+/* {{{ proto void WebView::stopLoading(void) */
+PHP_METHOD(WebView, stopLoading)
+{
+	php_webkit_webview_t *win = php_webkit_webview_fetch(getThis());
+	
+	if (
+		zend_parse_parameters_none() != SUCCESS
+	) {
+		return;
+	}
+
+	webkit_web_view_stop_loading(win->view);
 } /* }}} */
 
 ZEND_BEGIN_ARG_INFO_EX(php_webkit_webview_resize_info, 0, 0, 2)
@@ -707,6 +875,17 @@ ZEND_END_ARG_INFO()
 PHP_METHOD(WebView, onLoadChanged) {}
 /* }}} */
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(php_webkit_webview_load_failed_info, 0, 0, _IS_BOOL, 0)
+	ZEND_ARG_TYPE_INFO(0, load_state, IS_LONG, 0)
+	ZEND_ARG_TYPE_INFO(0, failing_uri, IS_STRING, 0)
+	ZEND_ARG_TYPE_INFO(0, error_code, IS_LONG, 0)
+	ZEND_ARG_TYPE_INFO(0, error_message, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
+/* {{{ proto bool WebView::onLoadFailed(long load_state, string failing_uri, int error_code, string error_message) */
+PHP_METHOD(WebView, onLoadFailed) {}
+/* }}} */
+
 ZEND_BEGIN_ARG_INFO_EX(php_webkit_webview_destroy_info, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
@@ -714,25 +893,30 @@ PHP_METHOD(WebView, onDestroy) {}
 
 /* {{{ */
 const zend_function_entry php_webkit_webview_methods[] = {
-	PHP_ME(WebView, __construct,    php_webkit_webview_construct_info,        ZEND_ACC_CTOR|ZEND_ACC_PUBLIC)
-	PHP_ME(WebView, __destruct,     php_webkit_webview_destruct_info,         ZEND_ACC_DTOR|ZEND_ACC_PUBLIC)
-	PHP_ME(WebView, loadURI,        php_webkit_webview_load_uri_info,         ZEND_ACC_PUBLIC)
-	PHP_ME(WebView, loadHTML,       php_webkit_webview_load_html_info,        ZEND_ACC_PUBLIC)
-	PHP_ME(WebView, setIcon,        php_webkit_webview_set_icon_info,         ZEND_ACC_PUBLIC)
-	PHP_ME(WebView, setTitle,       php_webkit_webview_set_title_info,        ZEND_ACC_PUBLIC)
-	PHP_ME(WebView, getTitle,       php_webkit_webview_get_title_info,        ZEND_ACC_PUBLIC)
-	PHP_ME(WebView, getURI,         php_webkit_webview_get_uri_info,          ZEND_ACC_PUBLIC)
-	PHP_ME(WebView, resize,         php_webkit_webview_resize_info,           ZEND_ACC_PUBLIC)
-	PHP_ME(WebView, move,           php_webkit_webview_move_info,             ZEND_ACC_PUBLIC)
-	PHP_ME(WebView, goBack,         php_webkit_webview_go_back_info,          ZEND_ACC_PUBLIC)
-	PHP_ME(WebView, goForward,      php_webkit_webview_go_forward_info,       ZEND_ACC_PUBLIC)
-	PHP_ME(WebView, canGoBack,      php_webkit_webview_can_go_back_info,      ZEND_ACC_PUBLIC)
-	PHP_ME(WebView, canGoForward,   php_webkit_webview_can_go_forward_info,   ZEND_ACC_PUBLIC)
-	PHP_ME(WebView, show,           php_webkit_webview_show_info,             ZEND_ACC_PUBLIC)
-	PHP_ME(WebView, hide,           php_webkit_webview_hide_info,             ZEND_ACC_PUBLIC)
-	PHP_ME(WebView, onClose,        php_webkit_webview_close_info,            ZEND_ACC_PROTECTED)
-	PHP_ME(WebView, onLoadChanged,  php_webkit_webview_load_changed_info,     ZEND_ACC_PROTECTED)
-	PHP_ME(WebView, onDestroy,      php_webkit_webview_close_info,            ZEND_ACC_PROTECTED)
+	PHP_ME(WebView, __construct,       php_webkit_webview_construct_info,            ZEND_ACC_CTOR|ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, __destruct,        php_webkit_webview_destruct_info,             ZEND_ACC_DTOR|ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, loadURI,           php_webkit_webview_load_uri_info,             ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, loadHTML,          php_webkit_webview_load_html_info,            ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, loadPlainText,     php_webkit_webview_load_plain_text_info,      ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, setIcon,           php_webkit_webview_set_icon_info,             ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, setTitle,          php_webkit_webview_set_title_info,            ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, getTitle,          php_webkit_webview_get_title_info,            ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, getURI,            php_webkit_webview_get_uri_info,              ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, reload,            php_webkit_webview_reload_info,               ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, reloadBypassCache, php_webkit_webview_reload_bypass_cache_info,  ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, stopLoading,       php_webkit_webview_stop_loading_info,         ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, resize,            php_webkit_webview_resize_info,               ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, move,              php_webkit_webview_move_info,                 ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, goBack,            php_webkit_webview_go_back_info,              ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, goForward,         php_webkit_webview_go_forward_info,           ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, canGoBack,         php_webkit_webview_can_go_back_info,          ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, canGoForward,      php_webkit_webview_can_go_forward_info,       ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, show,              php_webkit_webview_show_info,                 ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, hide,              php_webkit_webview_hide_info,                 ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, onClose,           php_webkit_webview_close_info,                ZEND_ACC_PROTECTED)
+	PHP_ME(WebView, onLoadChanged,     php_webkit_webview_load_changed_info,         ZEND_ACC_PROTECTED)
+	PHP_ME(WebView, onLoadFailed,      php_webkit_webview_load_failed_info,          ZEND_ACC_PROTECTED)
+	PHP_ME(WebView, onDestroy,         php_webkit_webview_close_info,                ZEND_ACC_PROTECTED)
 	PHP_FE_END
 }; /* }}} */
 
@@ -753,6 +937,30 @@ PHP_MINIT_FUNCTION(WebKit_WebView)
 	);
 
 	php_webkit_webview_handlers.offset = XtOffsetOf(php_webkit_webview_t, std);
+
+	zend_declare_class_constant_long(
+		webkitWebView_ce, 
+		ZEND_STRL("LOAD_STARTED"), 
+		WEBKIT_LOAD_STARTED
+	);
+
+	zend_declare_class_constant_long(
+		webkitWebView_ce, 
+		ZEND_STRL("LOAD_REDIRECTED"), 
+		WEBKIT_LOAD_REDIRECTED
+	);
+
+	zend_declare_class_constant_long(
+		webkitWebView_ce, 
+		ZEND_STRL("LOAD_COMMITTED"), 
+		WEBKIT_LOAD_COMMITTED
+	);
+
+	zend_declare_class_constant_long(
+		webkitWebView_ce, 
+		ZEND_STRL("LOAD_FINISHED"), 
+		WEBKIT_LOAD_FINISHED
+	);
 
 	return SUCCESS;
 } /* }}} */
