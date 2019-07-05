@@ -26,5 +26,5 @@ class Settings
         
     public function getHardwareAccelerationPolicy(): int {}
 
-	public function setHardwareAccelerationPolicy(int $enabled){}
+	public function setHardwareAccelerationPolicy(int $policy){}
 }
