@@ -34,11 +34,11 @@
 #include <classes/settings.h>
 
 void php_webkitgtk_set_call(
-	zend_object *object, 
-	const char *name, 
+	zend_object* object, 
+	const char* name, 
 	size_t nlength, 
-	zend_fcall_info *fci, 
-	zend_fcall_info_cache *fcc
+	zend_fcall_info* fci, 
+	zend_fcall_info_cache* fcc
 ){
 	zend_function *function = zend_hash_str_find_ptr(
 		&object->ce->function_table, name, nlength
@@ -52,16 +52,13 @@ void php_webkitgtk_set_call(
 	fci->object = object;
 	fci->no_separation = 1;
 
-	#if PHP_VERSION_ID < 70300
-	fcc->initialized = 1;
-	#endif
 	fcc->object = object;
 	fcc->function_handler = function;
 	fcc->calling_scope = object->ce;
 	fcc->called_scope = object->ce;
 }
 
-int php_webkitgtk_call(zend_fcall_info *fci, zend_fcall_info_cache *fcc) {
+int php_webkitgtk_call(zend_fcall_info* fci, zend_fcall_info_cache* fcc) {
 	int result = zend_call_function(fci, fcc);
 
 	if (result != SUCCESS) {
