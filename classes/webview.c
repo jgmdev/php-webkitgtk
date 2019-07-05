@@ -23,28 +23,29 @@
 
 #include "php.h"
 
+#include <classes/settings.h>
 #include <classes/webview.h>
 
 zend_object_handlers php_webkitgtk_webview_handlers;
 
-zend_class_entry *webkitgtkWebView_ce;
+zend_class_entry* webkitgtkWebView_ce;
 
 extern void php_webkitgtk_set_call(
-	zend_object *object, 
-	const char *name, 
+	zend_object* object, 
+	const char* name, 
 	size_t nlength, 
-	zend_fcall_info *fci, 
-	zend_fcall_info_cache *fcc
+	zend_fcall_info* fci, 
+	zend_fcall_info_cache* fcc
 );
 
-extern int php_webkitgtk_call(zend_fcall_info *fci, zend_fcall_info_cache *fcc);
+extern int php_webkitgtk_call(zend_fcall_info* fci, zend_fcall_info_cache* fcc);
 
-void php_webkitgtk_webview_close_handler(WebKitWebView *view, void *arg);
+void php_webkitgtk_webview_close_handler(WebKitWebView* view, void* arg);
 void php_webkitgtk_webview_load_changed_handler(
-	WebKitWebView *view, WebKitLoadEvent load_event,  void *arg
+	WebKitWebView* view, WebKitLoadEvent load_event,  void* arg
 );
 gboolean php_webkitgtk_webview_load_failed_handler (
-	WebKitWebView * view,
+	WebKitWebView* view,
 	WebKitLoadEvent load_event,
 	gchar* failing_uri,
 	GError* error,
@@ -52,8 +53,8 @@ gboolean php_webkitgtk_webview_load_failed_handler (
 );
 void php_webkitgtk_webview_destroy_handler(GtkWidget* widget, void* arg);
 
-zend_object* php_webkitgtk_webview_create(zend_class_entry *ce) {
-	php_webkitgtk_webview_t *w = (php_webkitgtk_webview_t*) 
+zend_object* php_webkitgtk_webview_create(zend_class_entry* ce) {
+	php_webkitgtk_webview_t* w = (php_webkitgtk_webview_t*) 
 		ecalloc(
 			1, 
 			sizeof(php_webkitgtk_webview_t) + zend_object_properties_size(ce)
@@ -99,7 +100,7 @@ zend_object* php_webkitgtk_webview_create(zend_class_entry *ce) {
 
 void php_webkitgtk_webview_recreate(zval* object)
 {
-	php_webkitgtk_webview_t *web_view = php_webkitgtk_webview_fetch(object);
+	php_webkitgtk_webview_t* web_view = php_webkitgtk_webview_fetch(object);
 
 	web_view->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_default_size(GTK_WINDOW(web_view->window), 800, 600);
@@ -192,8 +193,8 @@ void php_webkitgtk_webview_recreate(zval* object)
     gtk_widget_grab_focus(GTK_WIDGET(web_view->view));
 }
 
-void php_webkitgtk_webview_close_handler(WebKitWebView *view, void *arg) {
-	php_webkitgtk_webview_t *web_view = (php_webkitgtk_webview_t *) arg;
+void php_webkitgtk_webview_close_handler(WebKitWebView* view, void* arg) {
+	php_webkitgtk_webview_t *web_view = (php_webkitgtk_webview_t*) arg;
 
 	if (web_view->close.fci.size) {
 		php_webkitgtk_call(&web_view->close.fci, &web_view->close.fcc);
@@ -201,9 +202,9 @@ void php_webkitgtk_webview_close_handler(WebKitWebView *view, void *arg) {
 }
 
 void php_webkitgtk_webview_load_changed_handler(
-	WebKitWebView *view, WebKitLoadEvent load_event,  void *arg
+	WebKitWebView* view, WebKitLoadEvent load_event,  void* arg
 ){
-	php_webkitgtk_webview_t *web_view = (php_webkitgtk_webview_t *) arg;
+	php_webkitgtk_webview_t* web_view = (php_webkitgtk_webview_t*) arg;
 
 	zval load_event_val;
 
@@ -250,14 +251,14 @@ void php_webkitgtk_webview_load_changed_handler(
 }
 
 gboolean php_webkitgtk_webview_load_failed_handler (
-	WebKitWebView * view,
+	WebKitWebView* view,
 	WebKitLoadEvent load_event,
 	gchar* failing_uri,
 	GError* error,
 	void* arg
 )
 {
-	php_webkitgtk_webview_t *web_view = (php_webkitgtk_webview_t *) arg;
+	php_webkitgtk_webview_t* web_view = (php_webkitgtk_webview_t*) arg;
 
 	zval load_event_val;
 	zval failing_uri_val;
@@ -315,7 +316,7 @@ void php_webkitgtk_webview_destroy_handler(
 	GtkWidget* widget, void* arg
 )
 {
-	php_webkitgtk_webview_t *web_view = (php_webkitgtk_webview_t *) arg;
+	php_webkitgtk_webview_t* web_view = (php_webkitgtk_webview_t*) arg;
 
 	if (
 		!web_view->load_changed.fci.size
@@ -346,11 +347,11 @@ PHP_METHOD(WebView, __construct)
 {
 	static bool initialize = false;
 
-	php_webkitgtk_webview_t *win = php_webkitgtk_webview_fetch(getThis());
+	php_webkitgtk_webview_t* wv = php_webkitgtk_webview_fetch(getThis());
 
-	win->this = getThis();
+	wv->this = getThis();
 
-	zend_string *title = NULL;
+	zend_string* title = NULL;
 
 	if (
 		zend_parse_parameters(
@@ -368,9 +369,9 @@ PHP_METHOD(WebView, __construct)
 		initialize = true;
 	}
 
-	win->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_window_set_default_size(GTK_WINDOW(win->window), 800, 600);
-	gtk_window_set_position(GTK_WINDOW(win->window), GTK_WIN_POS_CENTER);
+	wv->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	gtk_window_set_default_size(GTK_WINDOW(wv->window), 800, 600);
+	gtk_window_set_position(GTK_WINDOW(wv->window), GTK_WIN_POS_CENTER);
 
 	if(ZSTR_LEN(title) > 0)
 	{
@@ -381,45 +382,45 @@ PHP_METHOD(WebView, __construct)
 			ZSTR_VAL(title)
 		);
 
-		gtk_window_set_title(GTK_WINDOW(win->window), ZSTR_VAL(title));
+		gtk_window_set_title(GTK_WINDOW(wv->window), ZSTR_VAL(title));
 	}
 
-	win->view = WEBKIT_WEB_VIEW(webkit_web_view_new());
+	wv->view = WEBKIT_WEB_VIEW(webkit_web_view_new());
 
 	g_signal_connect(
-		win->view, 
+		wv->view, 
 		"close", 
 		G_CALLBACK(php_webkitgtk_webview_close_handler), 
-		win
+		wv
 	);
 
     g_signal_connect(
-		win->view, 
+		wv->view, 
 		"load-changed", 
 		G_CALLBACK(php_webkitgtk_webview_load_changed_handler), 
-		win
+		wv
 	);
 
 	g_signal_connect(
-		win->view, 
+		wv->view, 
 		"load-failed", 
 		G_CALLBACK(php_webkitgtk_webview_load_failed_handler), 
-		win
+		wv
 	);
 
 	g_signal_connect(
-		win->window, 
+		wv->window, 
 		"destroy", 
 		G_CALLBACK(php_webkitgtk_webview_destroy_handler), 
-		win
+		wv
 	);
 
 	// Put the browser area into the main window
-    gtk_container_add(GTK_CONTAINER(win->window), GTK_WIDGET(win->view));
+    gtk_container_add(GTK_CONTAINER(wv->window), GTK_WIDGET(wv->view));
 
 	// Make sure that when the browser area becomes visible, it will get mouse
     // and keyboard events
-    gtk_widget_grab_focus(GTK_WIDGET(win->view));
+    gtk_widget_grab_focus(GTK_WIDGET(wv->view));
 } /* }}} */
 
 ZEND_BEGIN_ARG_INFO_EX(php_webkitgtk_webview_destruct_info, 0, 0, 0)
@@ -428,9 +429,9 @@ ZEND_END_ARG_INFO()
 /* {{{ proto void WebView::__destruct() */
 PHP_METHOD(WebView, __destruct) 
 {
-	php_webkitgtk_webview_t *view = php_webkitgtk_webview_fetch(getThis());
+	php_webkitgtk_webview_t* wv = php_webkitgtk_webview_fetch(getThis());
 
-	gtk_widget_destroy(view->window);
+	gtk_widget_destroy(wv->window);
 } /* }}} */
 
 ZEND_BEGIN_ARG_INFO_EX(php_webkitgtk_webview_load_uri_info, 0, 0, 1)
@@ -440,8 +441,8 @@ ZEND_END_ARG_INFO()
 /* {{{ proto void WebView::loadURI(string uri) */
 PHP_METHOD(WebView, loadURI)
 {
-	php_webkitgtk_webview_t *win = php_webkitgtk_webview_fetch(getThis());
-	zend_string *uri = NULL;
+	php_webkitgtk_webview_t* wv = php_webkitgtk_webview_fetch(getThis());
+	zend_string* uri = NULL;
 	
 	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "S", &uri) != SUCCESS) {
 		return;
@@ -454,7 +455,7 @@ PHP_METHOD(WebView, loadURI)
 		ZSTR_VAL(uri)
 	);
 
-	webkit_web_view_load_uri(win->view, ZSTR_VAL(uri));
+	webkit_web_view_load_uri(wv->view, ZSTR_VAL(uri));
 } /* }}} */
 
 ZEND_BEGIN_ARG_INFO_EX(php_webkitgtk_webview_load_html_info, 0, 0, 1)
@@ -465,10 +466,10 @@ ZEND_END_ARG_INFO()
 /* {{{ proto void WebView::loadHTML(string content, string base_uri) */
 PHP_METHOD(WebView, loadHTML)
 {
-	php_webkitgtk_webview_t *win = php_webkitgtk_webview_fetch(getThis());
+	php_webkitgtk_webview_t* wv = php_webkitgtk_webview_fetch(getThis());
 
-	zend_string *content = NULL;
-	zend_string *base_uri = NULL;
+	zend_string* content = NULL;
+	zend_string* base_uri = NULL;
 	
 	if(
 		zend_parse_parameters_throw(
@@ -483,12 +484,12 @@ PHP_METHOD(WebView, loadHTML)
 
 	if(base_uri == NULL)
 	{
-		webkit_web_view_load_html(win->view, ZSTR_VAL(content), NULL);
+		webkit_web_view_load_html(wv->view, ZSTR_VAL(content), NULL);
 	}
 	else
 	{
 		webkit_web_view_load_html(
-			win->view, 
+			wv->view, 
 			ZSTR_VAL(content), 
 			ZSTR_VAL(base_uri)
 		);
@@ -502,9 +503,9 @@ ZEND_END_ARG_INFO()
 /* {{{ proto void WebView::loadPlainText(string plain_text) */
 PHP_METHOD(WebView, loadPlainText)
 {
-	php_webkitgtk_webview_t *win = php_webkitgtk_webview_fetch(getThis());
+	php_webkitgtk_webview_t* wv = php_webkitgtk_webview_fetch(getThis());
 
-	zend_string *plain_text = NULL;
+	zend_string* plain_text = NULL;
 	
 	if(
 		zend_parse_parameters_throw(
@@ -517,7 +518,7 @@ PHP_METHOD(WebView, loadPlainText)
 	}
 
 	webkit_web_view_load_plain_text(
-		win->view, 
+		wv->view, 
 		ZSTR_VAL(plain_text)
 	);
 } /* }}} */
@@ -529,8 +530,8 @@ ZEND_END_ARG_INFO()
 /* {{{ proto bool WebView::setIcon(string filename) */
 PHP_METHOD(WebView, setIcon)
 {
-	php_webkitgtk_webview_t *win = php_webkitgtk_webview_fetch(getThis());
-	zend_string *file_name = NULL;
+	php_webkitgtk_webview_t* wv = php_webkitgtk_webview_fetch(getThis());
+	zend_string* file_name = NULL;
 	
 	if(
 		zend_parse_parameters_throw(
@@ -546,7 +547,7 @@ PHP_METHOD(WebView, setIcon)
 
 	if(
 		icon_return = gtk_window_set_icon_from_file(
-			GTK_WINDOW(win->window), 
+			GTK_WINDOW(wv->window), 
 			ZSTR_VAL(file_name), 
 			NULL
 		)
@@ -563,6 +564,33 @@ PHP_METHOD(WebView, setIcon)
 	RETURN_BOOL(icon_return)
 } /* }}} */
 
+ZEND_BEGIN_ARG_INFO_EX(php_webkitgtk_webview_set_settings_info, 0, 0, 1)
+	ZEND_ARG_OBJ_INFO(0, size, WebKit\\Settings, 0)
+ZEND_END_ARG_INFO()
+
+/* {{{ proto bool WebView::setSettings(WebKit\Settings settings) */
+PHP_METHOD(WebView, setSettings)
+{
+	php_webkitgtk_webview_t* wv = php_webkitgtk_webview_fetch(getThis());
+	zval* settings = NULL;
+	php_webkitgtk_settings_t* settings_t;
+	
+	if (
+		zend_parse_parameters_throw(
+			ZEND_NUM_ARGS(), 
+			"O", 
+			&settings, 
+			webkitgtkSettings_ce
+		) != SUCCESS
+	) {
+		return;
+	}
+
+	settings_t = php_webkitgtk_settings_fetch(settings);
+
+	webkit_web_view_set_settings(wv->view, settings_t->settings);
+} /* }}} */
+
 ZEND_BEGIN_ARG_INFO_EX(php_webkitgtk_webview_set_title_info, 0, 0, 1)
 	ZEND_ARG_TYPE_INFO(0, title, IS_STRING, 0)
 ZEND_END_ARG_INFO()
@@ -570,8 +598,8 @@ ZEND_END_ARG_INFO()
 /* {{{ proto bool WebView::setTitle(string title) */
 PHP_METHOD(WebView, setTitle)
 {
-	php_webkitgtk_webview_t *win = php_webkitgtk_webview_fetch(getThis());
-	zend_string *title = NULL;
+	php_webkitgtk_webview_t* wv = php_webkitgtk_webview_fetch(getThis());
+	zend_string* title = NULL;
 	
 	if (
 		zend_parse_parameters_throw(
@@ -583,7 +611,25 @@ PHP_METHOD(WebView, setTitle)
 		return;
 	}
 
-	gtk_window_set_title(GTK_WINDOW(win->window), ZSTR_VAL(title));
+	gtk_window_set_title(GTK_WINDOW(wv->window), ZSTR_VAL(title));
+} /* }}} */
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(php_webkitgtk_webview_get_settings_info, 0, 0, "WebKitGtk\\Settings", 0)
+ZEND_END_ARG_INFO()
+
+/* {{{ proto Settings WebView::getSettings(void) */
+PHP_METHOD(WebView, getSettings) 
+{
+	php_webkitgtk_webview_t* wv = php_webkitgtk_webview_fetch(getThis());
+	int width = 0, height = 0;
+
+	if (zend_parse_parameters_none() != SUCCESS) {
+		return;
+	}
+
+	WebKitSettings* settings = webkit_web_view_get_settings(wv->view);
+
+	php_webkitgtk_settings_construct(return_value, settings);	
 } /* }}} */
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(php_webkitgtk_webview_get_title_info, 0, 0, IS_STRING, 0)
@@ -592,7 +638,7 @@ ZEND_END_ARG_INFO()
 /* {{{ proto string WebView::getTitle(void) */
 PHP_METHOD(WebView, getTitle)
 {
-	php_webkitgtk_webview_t *win = php_webkitgtk_webview_fetch(getThis());
+	php_webkitgtk_webview_t* wv = php_webkitgtk_webview_fetch(getThis());
 	
 	if (
 		zend_parse_parameters_none() != SUCCESS
@@ -600,7 +646,7 @@ PHP_METHOD(WebView, getTitle)
 		return;
 	}
 
-	const gchar* title = webkit_web_view_get_title(win->view);
+	const gchar* title = webkit_web_view_get_title(wv->view);
 
 	RETURN_STRING(title != NULL ? title : "")
 } /* }}} */
@@ -611,7 +657,7 @@ ZEND_END_ARG_INFO()
 /* {{{ proto string WebView::getURI(void) */
 PHP_METHOD(WebView, getURI)
 {
-	php_webkitgtk_webview_t *win = php_webkitgtk_webview_fetch(getThis());
+	php_webkitgtk_webview_t* wv = php_webkitgtk_webview_fetch(getThis());
 	
 	if (
 		zend_parse_parameters_none() != SUCCESS
@@ -619,7 +665,7 @@ PHP_METHOD(WebView, getURI)
 		return;
 	}
 
-	const gchar* uri = webkit_web_view_get_uri(win->view);
+	const gchar* uri = webkit_web_view_get_uri(wv->view);
 
 	RETURN_STRING(uri != NULL ? uri : "")
 } /* }}} */
@@ -630,7 +676,7 @@ ZEND_END_ARG_INFO()
 /* {{{ proto void WebView::reload(void) */
 PHP_METHOD(WebView, reload)
 {
-	php_webkitgtk_webview_t *win = php_webkitgtk_webview_fetch(getThis());
+	php_webkitgtk_webview_t* wv = php_webkitgtk_webview_fetch(getThis());
 	
 	if (
 		zend_parse_parameters_none() != SUCCESS
@@ -638,7 +684,7 @@ PHP_METHOD(WebView, reload)
 		return;
 	}
 
-	webkit_web_view_reload(win->view);
+	webkit_web_view_reload(wv->view);
 } /* }}} */
 
 ZEND_BEGIN_ARG_INFO_EX(php_webkitgtk_webview_reload_bypass_cache_info, 0, 0, 0)
@@ -647,7 +693,7 @@ ZEND_END_ARG_INFO()
 /* {{{ proto void WebView::reloadBypassCache(void) */
 PHP_METHOD(WebView, reloadBypassCache)
 {
-	php_webkitgtk_webview_t *win = php_webkitgtk_webview_fetch(getThis());
+	php_webkitgtk_webview_t* wv = php_webkitgtk_webview_fetch(getThis());
 	
 	if (
 		zend_parse_parameters_none() != SUCCESS
@@ -655,7 +701,7 @@ PHP_METHOD(WebView, reloadBypassCache)
 		return;
 	}
 
-	webkit_web_view_reload_bypass_cache(win->view);
+	webkit_web_view_reload_bypass_cache(wv->view);
 } /* }}} */
 
 ZEND_BEGIN_ARG_INFO_EX(php_webkitgtk_webview_stop_loading_info, 0, 0, 0)
@@ -664,7 +710,7 @@ ZEND_END_ARG_INFO()
 /* {{{ proto void WebView::stopLoading(void) */
 PHP_METHOD(WebView, stopLoading)
 {
-	php_webkitgtk_webview_t *win = php_webkitgtk_webview_fetch(getThis());
+	php_webkitgtk_webview_t* wv = php_webkitgtk_webview_fetch(getThis());
 	
 	if (
 		zend_parse_parameters_none() != SUCCESS
@@ -672,7 +718,7 @@ PHP_METHOD(WebView, stopLoading)
 		return;
 	}
 
-	webkit_web_view_stop_loading(win->view);
+	webkit_web_view_stop_loading(wv->view);
 } /* }}} */
 
 ZEND_BEGIN_ARG_INFO_EX(php_webkitgtk_webview_resize_info, 0, 0, 2)
@@ -683,7 +729,7 @@ ZEND_END_ARG_INFO()
 /* {{{ proto void WebView::resize(int width, int height) */
 PHP_METHOD(WebView, resize)
 {
-	php_webkitgtk_webview_t *win = php_webkitgtk_webview_fetch(getThis());
+	php_webkitgtk_webview_t* wv = php_webkitgtk_webview_fetch(getThis());
 	
 	zend_long width;
 	zend_long height;
@@ -713,7 +759,7 @@ PHP_METHOD(WebView, resize)
 		height
 	);
 
-	gtk_window_resize(GTK_WINDOW(win->window), width, height);
+	gtk_window_resize(GTK_WINDOW(wv->window), width, height);
 } /* }}} */
 
 ZEND_BEGIN_ARG_INFO_EX(php_webkitgtk_webview_move_info, 0, 0, 2)
@@ -724,7 +770,7 @@ ZEND_END_ARG_INFO()
 /* {{{ proto void WebView::move(int x, int y) */
 PHP_METHOD(WebView, move)
 {
-	php_webkitgtk_webview_t *win = php_webkitgtk_webview_fetch(getThis());
+	php_webkitgtk_webview_t* wv = php_webkitgtk_webview_fetch(getThis());
 	
 	zend_long x;
 	zend_long y;
@@ -754,7 +800,7 @@ PHP_METHOD(WebView, move)
 		y
 	);
 
-	gtk_window_move(GTK_WINDOW(win->window), x, y);
+	gtk_window_move(GTK_WINDOW(wv->window), x, y);
 } /* }}} */
 
 ZEND_BEGIN_ARG_INFO_EX(php_webkitgtk_webview_go_back_info, 0, 0, 0)
@@ -763,13 +809,13 @@ ZEND_END_ARG_INFO()
 /* {{{ proto void WebView::goBack(void) */
 PHP_METHOD(WebView, goBack)
 {
-	php_webkitgtk_webview_t *win = php_webkitgtk_webview_fetch(getThis());
+	php_webkitgtk_webview_t* wv = php_webkitgtk_webview_fetch(getThis());
 
 	if (zend_parse_parameters_none() != SUCCESS) {
 		return;
 	}
 
-    webkit_web_view_go_back(win->view);
+    webkit_web_view_go_back(wv->view);
 } /* }}} */
 
 ZEND_BEGIN_ARG_INFO_EX(php_webkitgtk_webview_go_forward_info, 0, 0, 0)
@@ -778,13 +824,13 @@ ZEND_END_ARG_INFO()
 /* {{{ proto void WebView::goForward(void) */
 PHP_METHOD(WebView, goForward)
 {
-	php_webkitgtk_webview_t *win = php_webkitgtk_webview_fetch(getThis());
+	php_webkitgtk_webview_t* wv = php_webkitgtk_webview_fetch(getThis());
 
 	if (zend_parse_parameters_none() != SUCCESS) {
 		return;
 	}
 
-    webkit_web_view_go_forward(win->view);
+    webkit_web_view_go_forward(wv->view);
 } /* }}} */
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(php_webkitgtk_webview_can_go_back_info, 0, 0, _IS_BOOL, 0)
@@ -793,7 +839,7 @@ ZEND_END_ARG_INFO()
 /* {{{ proto bool WebView::canGoBack(void) */
 PHP_METHOD(WebView, canGoBack)
 {
-	php_webkitgtk_webview_t *win = php_webkitgtk_webview_fetch(getThis());
+	php_webkitgtk_webview_t* wv = php_webkitgtk_webview_fetch(getThis());
 	
 	if (zend_parse_parameters_none() != SUCCESS) {
 		return;
@@ -801,7 +847,7 @@ PHP_METHOD(WebView, canGoBack)
 
 	RETURN_BOOL(
 		webkit_web_view_can_go_back(
-			win->view
+			wv->view
 		)
 	)
 } /* }}} */
@@ -812,7 +858,7 @@ ZEND_END_ARG_INFO()
 /* {{{ proto bool WebView::canGoForward(void) */
 PHP_METHOD(WebView, canGoForward)
 {
-	php_webkitgtk_webview_t *win = php_webkitgtk_webview_fetch(getThis());
+	php_webkitgtk_webview_t* wv = php_webkitgtk_webview_fetch(getThis());
 	
 	if (zend_parse_parameters_none() != SUCCESS) {
 		return;
@@ -820,7 +866,7 @@ PHP_METHOD(WebView, canGoForward)
 
 	RETURN_BOOL(
 		webkit_web_view_can_go_forward(
-			win->view
+			wv->view
 		)
 	)
 } /* }}} */
@@ -831,14 +877,14 @@ ZEND_END_ARG_INFO()
 /* {{{ proto void WebView::show(void) */
 PHP_METHOD(WebView, show)
 {
-	php_webkitgtk_webview_t *win = php_webkitgtk_webview_fetch(getThis());
+	php_webkitgtk_webview_t* wv = php_webkitgtk_webview_fetch(getThis());
 
 	if (zend_parse_parameters_none() != SUCCESS) {
 		return;
 	}
 
     // Make sure the main window and all its contents are visible
-    gtk_widget_show_all(win->window);
+    gtk_widget_show_all(wv->window);
 
     // Run the main GTK+ event loop
     gtk_main();
@@ -850,14 +896,14 @@ ZEND_END_ARG_INFO()
 /* {{{ proto void WebView::hide(void) */
 PHP_METHOD(WebView, hide) 
 {
-	php_webkitgtk_webview_t *win = php_webkitgtk_webview_fetch(getThis());
+	php_webkitgtk_webview_t* wv = php_webkitgtk_webview_fetch(getThis());
 
 	if (zend_parse_parameters_none() != SUCCESS) {
 		return;
 	}
 
     // Make sure the main window and all its contents are visible
-    gtk_widget_hide(win->window);
+    gtk_widget_hide(wv->window);
 
     // Run the main GTK+ event loop
     gtk_main_quit();
@@ -900,7 +946,9 @@ const zend_function_entry php_webkitgtk_webview_methods[] = {
 	PHP_ME(WebView, loadHTML,          php_webkitgtk_webview_load_html_info,            ZEND_ACC_PUBLIC)
 	PHP_ME(WebView, loadPlainText,     php_webkitgtk_webview_load_plain_text_info,      ZEND_ACC_PUBLIC)
 	PHP_ME(WebView, setIcon,           php_webkitgtk_webview_set_icon_info,             ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, setSettings,       php_webkitgtk_webview_set_settings_info,         ZEND_ACC_PUBLIC)
 	PHP_ME(WebView, setTitle,          php_webkitgtk_webview_set_title_info,            ZEND_ACC_PUBLIC)
+	PHP_ME(WebView, getSettings,       php_webkitgtk_webview_get_settings_info,         ZEND_ACC_PUBLIC)
 	PHP_ME(WebView, getTitle,          php_webkitgtk_webview_get_title_info,            ZEND_ACC_PUBLIC)
 	PHP_ME(WebView, getURI,            php_webkitgtk_webview_get_uri_info,              ZEND_ACC_PUBLIC)
 	PHP_ME(WebView, reload,            php_webkitgtk_webview_reload_info,               ZEND_ACC_PUBLIC)

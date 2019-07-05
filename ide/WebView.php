@@ -13,13 +13,17 @@ class WebView
 
     public function loadURI(string $uri) {}
 
-    public function loadHTML(string $content, string $base_uri) {}
+    public function loadHTML(string $content, string $base_uri="") {}
 
     public function loadPlainText(string $plain_text) {}
 
     public function setIcon(string $filename) {}
 
+    public function setSettings(Settings $settings) {}
+
     public function setTitle(string $title) {}
+
+    public function getSettings(): Settings {}
 
     public function getTitle(): string {}
 

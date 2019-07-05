@@ -2,7 +2,7 @@
 
 chdir(__DIR__);
 
-$view = new WebKit\WebView("My Window");
+$view = new WebKitGtk\WebView("My Window");
 
 $view->loadURI("http://google.com/");
 $view->setIcon("icon.svg");

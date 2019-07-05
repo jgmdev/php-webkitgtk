@@ -26,6 +26,7 @@ if test "$PHP_WEBKITGTK" != "no"; then
   PHP_NEW_EXTENSION(
     webkitgtk, 
     webkitgtk.c \
-      classes/webview.c,
+      classes/webview.c \
+      classes/settings.c,
     $ext_shared,,-DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
 fi

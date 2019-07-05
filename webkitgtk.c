@@ -31,6 +31,7 @@
 #include "php_webkitgtk.h"
 
 #include <classes/webview.h>
+#include <classes/settings.h>
 
 void php_webkitgtk_set_call(
 	zend_object *object, 
@@ -75,6 +76,7 @@ int php_webkitgtk_call(zend_fcall_info *fci, zend_fcall_info_cache *fcc) {
 PHP_MINIT_FUNCTION(webkitgtk)
 {
 	PHP_MINIT(WebKitGtk_WebView)(INIT_FUNC_ARGS_PASSTHRU);
+	PHP_MINIT(WebKitGtk_Settings)(INIT_FUNC_ARGS_PASSTHRU);
 
 	return SUCCESS;
 }
